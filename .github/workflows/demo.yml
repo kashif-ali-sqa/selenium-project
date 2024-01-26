@@ -1,6 +1,9 @@
 name: Selenium Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - demosite
 
 jobs:
   test:
@@ -10,15 +13,20 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Set up JDK 11
+    - name: Set up Java
       uses: actions/setup-java@v2
       with:
         distribution: 'adopt'
         java-version: '11'
 
-    - name: Build with Maven
-      run: mvn clean install -DskipTests
-      
+    - name: Set up ChromeDriver
+      run: |
+        LATEST_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+        curl -O https://chromedriver.storage.googleapis.com/$LATEST_VERSION/chromedriver_linux64.zip
+        unzip chromedriver_linux64.zip
+        sudo mv chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
 
-    - name: Run Selenium Tests
-      run: mvn test -e -X
+    - name: Build and Run Selenium Tests
+      run: |
+        ./mvnw clean test -Dbrowser=chrome
